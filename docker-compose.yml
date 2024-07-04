@@ -1,0 +1,42 @@
+services:
+  ghost:
+    image: ghost:5-alpine
+    ports:
+      - 3002:2368
+    environment:
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: ghost
+      database__connection__password: ghost
+      database__connection__database: ghost
+      url: http://cms.safran.agency
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:2368/content/settings/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ghost-data:/var/lib/ghost/content
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ghost
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ghost
+    volumes:
+      - ghost-db-data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  ghost-data:
+  ghost-db-data:
